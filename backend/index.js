@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import path from "path";
-import { connection } from "./db/connection.js";
+import { connection } from "./database/connection.js";
 import authRoutes from "./routes/auth.routes.js";
 
 dotenv.config();
