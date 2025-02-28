@@ -10,7 +10,7 @@ import attendanceRoutes from "./routes/attendance.routes.js";
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5002;
 const __dirname = path.resolve();
 
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
@@ -18,7 +18,7 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json()); // Allow to parse incoming requests with json "req.body"
 app.use(cookieParser());
 app.use("/api/auth", authRoutes); // Prefix for auth routes "/api/auth/login"
-app.use("api/attendance", attendanceRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "/frontend/dist")));

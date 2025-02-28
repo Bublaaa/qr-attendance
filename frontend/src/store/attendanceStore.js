@@ -11,23 +11,41 @@ axios.defaults.withCredentials = true;
 
 export const useAttendanceStore = create((set) => ({
   attendances: null,
-  isAuthenticated: false,
   error: null,
   isLoading: false,
   message: null,
 
-  getAttendance: async () => {
+  getAttendance: async (userId) => {
     set({ isLoading: true, error: null });
+
     try {
-      const response = await axios.get(`${API_URL}attendance/get`);
-      console.log(response);
+      const response = await axios.post(`${API_URL}attendance/get`, { userId });
       set({
-        attendances: response.attendances,
+        attendances: response.data.attendances,
         isLoading: false,
       });
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error fetching attendances";
+
+      set({ error: errorMessage, isLoading: false });
+      toast.error(errorMessage);
+    }
+  },
+
+  getAttendanceToday: async (userId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await axios.get(`${API_URL}attendance/today`, {
+        userId,
+      });
+      console.log(userId);
+      set({
+        attendances: response.attendances,
+        isLoading: false,
+      });
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "No attendance yet";
       set({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
     }

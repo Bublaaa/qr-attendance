@@ -112,6 +112,37 @@ export const getAttendance = async (req, res) => {
   }
 };
 
+export const getAttendanceToday = async (req, res) => {
+  const { userId } = req.body;
+  try {
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "User ID is required" });
+    }
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const attendances = await Attendance.find({
+      userId,
+      checkInTime: { $gte: startOfDay, $lte: endOfDay },
+    });
+
+    if (!attendances.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No attendance records found for today",
+      });
+    }
+    res.status(200).json({ success: true, attendances });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const updateAttendance = async (req, res) => {
   const { id } = req.params;
   const { checkInTime, checkOutTime, status } = req.body;
