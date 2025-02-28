@@ -1,4 +1,4 @@
-import { Attendance } from "../models/attendance.model";
+import { Attendance } from "../models/attendance.model.js";
 
 const getStatus = (checkInTime) => {
   const clockInTime = new Date();
@@ -113,7 +113,7 @@ export const getAttendance = async (req, res) => {
 };
 
 export const updateAttendance = async (req, res) => {
-  const { attendanceId } = req.params;
+  const { id } = req.params;
   const { checkInTime, checkOutTime, status } = req.body;
 
   try {
@@ -152,7 +152,7 @@ export const updateAttendance = async (req, res) => {
 };
 
 export const deleteAttendance = async (req, res) => {
-  const { attendanceId } = req.params;
+  const { id } = req.params;
 
   try {
     const attendance = await Attendance.findByIdAndDelete(attendanceId);
