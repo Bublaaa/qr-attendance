@@ -24,10 +24,6 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    position: {
-      type: String,
-      default: "employee",
-    },
     resetPasswordToken: String,
     resetPasswordExpiresAt: Date,
     verificationToken: String,
