@@ -3,8 +3,6 @@ export const requestLocation = () => {
     navigator.permissions
       .query({ name: "geolocation" })
       .then((permissionStatus) => {
-        console.log("Permission Status:", permissionStatus.state);
-
         if (
           permissionStatus.state === "granted" ||
           permissionStatus.state === "prompt"

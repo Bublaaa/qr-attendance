@@ -45,16 +45,26 @@ const DashboardPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h3 className="text-xl font-semibold text-green-400 mb-3">
-            Attendance Today -{" "}
-            {attendances
-              ? new Date(attendances[0].createdAt).toLocaleDateString("id-ID", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })
-              : "No attendance recorded"}
-          </h3>
+          <div className="flex flex-row items-center w-full justify-between mb-3">
+            <h3 className="text-xl font-semibold text-green-400">
+              Attendance -{" "}
+              {attendances
+                ? new Date(attendances[0].createdAt).toLocaleDateString(
+                    "id-ID",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    }
+                  )
+                : "No attendance recorded"}
+            </h3>
+
+            <NavLink to={"/attendance/all"} className="text-gray-300">
+              See More
+            </NavLink>
+          </div>
+          {/* Clock In */}
           <p className="text-gray-300">
             <span className="font-bold">Clock In :</span>
             {attendances
@@ -65,8 +75,9 @@ const DashboardPage = () => {
                     minute: "2-digit",
                   }
                 )
-              : "No attendance recorded"}
+              : "No clock in recorded"}
           </p>
+          {/* Clock Out */}
           <p className="text-gray-300">
             <span className="font-bold">Clock Out :</span>
             {attendances
@@ -77,7 +88,7 @@ const DashboardPage = () => {
                     minute: "2-digit",
                   }
                 )
-              : "No attendance recorded"}
+              : "No clock out recorded"}
           </p>
         </motion.div>
       </div>
@@ -88,13 +99,13 @@ const DashboardPage = () => {
         transition={{ delay: 0.6 }}
         className="mt-4"
       >
-        <NavLink to={"/attendance"}>
+        <NavLink to={"/attendance/scan"}>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-lg shadow-lg hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-900"
           >
-            Attendance
+            Scan
           </motion.button>
         </NavLink>
       </motion.div>

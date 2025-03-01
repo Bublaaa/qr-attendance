@@ -6,8 +6,9 @@ import EmailVerificationPage from "./pages/EmailVerificationPage";
 import DashboardPage from "./pages/DashboardPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import AttendancePage from "./pages/AttendancePage";
+import ScanAttendancePage from "./pages/ScanAttendancePage.jsx";
 import GenerateQrCodePage from "./pages/GenerateQrCodePage";
+import AttendancePage from "./pages/AttendancePage.jsx";
 
 import LoadingSpinner from "./components/LoadingSpinner";
 
@@ -64,11 +65,37 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/attendance">
+          <Route
+            path="scan"
+            element={
+              <ProtectedRoute>
+                <ScanAttendancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="all"
+            element={
+              <ProtectedRoute>
+                <AttendancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="generate-qr"
+            element={
+              <ProtectedRoute>
+                <GenerateQrCodePage />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
         <Route
           path="/attendance"
           element={
             <ProtectedRoute>
-              <AttendancePage />
+              <ScanAttendancePage />
             </ProtectedRoute>
           }
         />

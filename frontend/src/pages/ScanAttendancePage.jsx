@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAttendanceStore } from "../store/attendanceStore";
 import { requestLocation } from "../utils/location.js";
 import { useAuthStore } from "../store/authStore.js";
+import QrScanner from "../components/QrScanner";
 
 const AttendancePage = () => {
   const { user } = useAuthStore();
@@ -50,8 +51,13 @@ const AttendancePage = () => {
           transition={{ delay: 0.2 }}
         >
           <h3 className="text-xl font-semibold text-green-400 mb-3">
-            Attendance data for user:
+            Scan the QR
           </h3>
+          {locationGranted === null && <p>Checking location permission...</p>}
+          {locationGranted === false && (
+            <p>❌ Location permission is required for attendance.</p>
+          )}
+          {locationGranted === true && <QrScanner onScanSuccess={handleScan} />}
         </motion.div>
       </div>
       <motion.div
