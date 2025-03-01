@@ -1,4 +1,6 @@
 import { Attendance } from "../models/attendance.model.js";
+import { generateSessionId } from "../utils/generateSessionId.js";
+import QRCode from "qrcode";
 
 const getStatus = (checkInTime) => {
   const clockInTime = new Date();
@@ -201,5 +203,26 @@ export const deleteAttendance = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const generateQrCode = async (req, res) => {
+  try {
+    const sessionId = generateSessionId();
+    const attendanceUrl = `http://localhost:5002/api/attendance/create?sessionId=${sessionId}`;
+    const qrCodeDataUrl = await QRCode.toDataURL(attendanceUrl);
+
+    res.status(200).json({
+      success: true,
+      sessionId,
+      qrCode: qrCodeDataUrl, // Base64 image
+      attendanceUrl,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to generate QR Code",
+      error: error.message,
+    });
   }
 };

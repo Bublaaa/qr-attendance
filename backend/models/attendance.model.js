@@ -7,8 +7,9 @@ const AttendanceSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    checkInTime: { type: Date, required: true },
-    checkOutTime: { type: Date },
+    sessionId: { type: String, required: true },
+    clockInTime: { type: Date, required: true },
+    clockOutTime: { type: Date },
     status: {
       type: String,
       enum: ["on-time", "late", "early", "absent"],

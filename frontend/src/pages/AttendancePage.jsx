@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import QrScanner from "../components/QrScanner"; // Import the new scanner component
+import QrScanner from "../components/QrScanner";
 
 const AttendancePage = () => {
   const [scanResult, setScanResult] = useState(null);
@@ -24,9 +24,9 @@ const AttendancePage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          {/* <h3 className="text-xl font-semibold text-green-400 mb-3">
+          <h3 className="text-xl font-semibold text-green-400 mb-3">
             Attendance Today
-          </h3> */}
+          </h3>
           {scanResult ? (
             <div>
               ✅ Success:{" "}
