@@ -1,14 +1,37 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAttendanceStore } from "../store/attendanceStore";
+import { requestLocation } from "../utils/location.js";
 import { useAuthStore } from "../store/authStore.js";
 import QrScanner from "../components/QrScanner";
 
 const AttendancePage = () => {
   const { user } = useAuthStore();
   const { attendances, message, handleScanSuccess } = useAttendanceStore();
+  const [locationGranted, setLocationGranted] = useState(null);
+  const [location, setLocation] = useState(null);
 
+  useEffect(() => {
+    const checkLocationPermission = async () => {
+      try {
+        const coords = await requestLocation();
+        setLocation(coords);
+        setLocationGranted(true);
+      } catch (error) {
+        console.error("Location permission denied:", error);
+        setLocationGranted(false);
+      }
+    };
+    checkLocationPermission();
+  }, []);
+
+  const handleScan = (data) => {
+    console.log(data);
+    if (data) {
+      handleScanSuccess(data, user._id, location);
+    }
+  };
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -30,14 +53,17 @@ const AttendancePage = () => {
           <h3 className="text-xl font-semibold text-green-400 mb-3">
             Attendance Today
           </h3>
-          {!attendances ? (
-            <QrScanner
-              onScanSuccess={(scannedData) =>
-                handleScanSuccess(scannedData, user._id)
-              }
-            />
+          {locationGranted === null && <p>Checking location permission...</p>}
+          {locationGranted === false && (
+            <p>❌ Location permission is required for attendance.</p>
+          )}
+          {locationGranted === true && <QrScanner onScanSuccess={handleScan} />}
+          {location ? (
+            <p>
+              📍 Location: {location.latitude}, {location.longitude}
+            </p>
           ) : (
-            <div>✅ Success: {message}</div>
+            <p>Requesting location...</p>
           )}
         </motion.div>
       </div>

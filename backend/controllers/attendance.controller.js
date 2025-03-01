@@ -1,6 +1,7 @@
 import { Attendance } from "../models/attendance.model.js";
 import { generateSessionId } from "../utils/generateSessionId.js";
 import QRCode from "qrcode";
+import { requestLocation } from "../../frontend/src/utils/location.js";
 
 const getStatus = (clockIn) => {
   const clockInTime = new Date();
@@ -15,55 +16,31 @@ const getStatus = (clockIn) => {
   return "on-time";
 };
 
-const requestLocation = () => {
-  return new Promise((resolve, reject) => {
-    navigator.permissions
-      .query({ name: "geolocation" })
-      .then((permissionStatus) => {
-        if (permissionStatus.state === "granted") {
-          navigator.geolocation.getCurrentPosition(
-            (position) => resolve(position.coords),
-            (error) => reject(error)
-          );
-        } else {
-          reject(new Error("Location permission denied"));
-        }
-      })
-      .catch((error) => reject(error));
-  });
-};
-
 export const createAttendance = async (req, res) => {
-  const { userId } = req.body;
+  const { userId, location } = req.body;
   const { sessionId } = req.params;
-  try {
-    const today = now.toISOString().split("T")[0];
-    const todaySessionId = today + "-session";
-    const clockInTime = new Date();
-    const status = getStatus(clockInTime);
 
-    let latitude = null;
-    let longitude = null;
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "User ID is required" });
+  }
+
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const todaySessionId = `${today}-session`;
 
     if (sessionId !== todaySessionId) {
       return res
         .status(400)
-        .json({ success: false, message: "Session id is not match" });
+        .json({ success: false, message: "Session ID does not match" });
     }
 
     // Request location permission
-    try {
-      const location = await requestLocation();
-      latitude = location.latitude;
-      longitude = location.longitude;
-    } catch (error) {
-      return res.status(403).json({
-        success: false,
-        message: "Location access is required for attendance",
-      });
-    }
+    let latitude = location.latitude;
+    let longitude = location.longitude;
 
-    // Check if user already clocked in
+    // Check if user has already clocked in
     let attendance = await Attendance.findOne({
       userId,
       sessionId,
@@ -71,23 +48,21 @@ export const createAttendance = async (req, res) => {
     });
 
     if (attendance) {
-      // clocking out
       attendance.clockOutTime = new Date();
       await attendance.save();
 
       return res.status(200).json({
         success: true,
-        message: "clock-out successful",
+        message: "Clock-out successful",
         attendance,
       });
     } else {
-      // clocking in
       attendance = new Attendance({
         userId,
         sessionId,
-        clockInTime,
+        clockInTime: new Date(),
         clockOutTime: null,
-        status,
+        status: getStatus(new Date()),
         latitude,
         longitude,
       });
@@ -96,11 +71,12 @@ export const createAttendance = async (req, res) => {
 
       return res.status(201).json({
         success: true,
-        message: "clock-in successful",
+        message: "Clock-in successful",
         attendance,
       });
     }
   } catch (error) {
+    console.error("Attendance Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -114,14 +90,13 @@ export const getAttendance = async (req, res) => {
         message: "User not found",
       });
     }
-    const attendances = Attendance.find;
-    if (attendances.length < 0 || !attendances) {
+    const attendances = await Attendance.find({ userId });
+    if (!attendances || attendances.length === 0) {
       return res
         .status(404)
-        .json({ success: false, message: "Failed to retrieve data" });
+        .json({ success: false, message: "No attendance records found" });
     }
-
-    res.status(200).json({ success: true, attendances });
+    res.status(200).json({ success: true, attendances: attendances });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -143,7 +118,7 @@ export const getAttendanceToday = async (req, res) => {
 
     const attendances = await Attendance.find({
       userId,
-      clockInTime: { $gte: startOfDay, $lte: endOfDay },
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
     });
 
     if (!attendances.length) {

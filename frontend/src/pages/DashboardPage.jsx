@@ -10,9 +10,9 @@ const DashboardPage = () => {
   const handleLogout = () => {
     logout();
   };
-  const { attendance, isLoading, getAttendanceToday } = useAttendanceStore();
+  const { attendances, isLoading, getAttendanceToday } = useAttendanceStore();
   useEffect(() => {
-    getAttendanceToday(user.id);
+    getAttendanceToday(user._id);
   }, [getAttendanceToday]);
 
   return (
@@ -47,19 +47,38 @@ const DashboardPage = () => {
           transition={{ delay: 0.4 }}
         >
           <h3 className="text-xl font-semibold text-green-400 mb-3">
-            Attendance Today
+            Attendance Today -{" "}
+            {attendances
+              ? new Date(attendances[0].createdAt).toLocaleDateString("id-ID", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
+              : "No attendance recorded"}
           </h3>
           <p className="text-gray-300">
-            <span className="font-bold">Joined :</span>
-            {new Date(attendance).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            <span className="font-bold">Clock In :</span>
+            {attendances
+              ? new Date(attendances[0].clockInTime).toLocaleTimeString(
+                  "id-ID",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )
+              : "No attendance recorded"}
           </p>
           <p className="text-gray-300">
-            <span className="font-bold">Last Login :</span>
-            {formatDate(user.lastLogin)}
+            <span className="font-bold">Clock Out :</span>
+            {attendances
+              ? new Date(attendances[0].clockOutTime).toLocaleTimeString(
+                  "id-ID",
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )
+              : "No attendance recorded"}
           </p>
         </motion.div>
       </div>

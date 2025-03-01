@@ -34,29 +34,31 @@ export const useAttendanceStore = create((set) => ({
     }
   },
 
-  handleScanSuccess: async (scannedData, userId) => {
+  handleScanSuccess: async (scannedData, userId, location) => {
     set({ isLoading: true, error: null, message: null });
-
+    console.log(scannedData);
     try {
-      const { sessionId } = JSON.parse(scannedData);
-      const attendanceUrl = `${API_URL}attendance/create/${sessionId}`;
+      console.log("Posting to:", scannedData);
       set({ message: "Sending attendance..." });
-      console.log(sessionId);
-      const response = await axios.post(attendanceUrl, { userId });
 
-      if (response) {
+      const response = await axios.post(scannedData, { userId, location });
+
+      if (response.data.success) {
         set({
-          attendances: response.data,
+          attendances: response.data.attendance,
           isLoading: false,
           message: "✅ Attendance recorded successfully!",
         });
-        toast.success("Attendance recorded successfully!");
+        toast("Attendance recorded successfully!");
+      } else {
+        throw new Error(response.data.message);
       }
     } catch (error) {
-      toast.error(error);
+      console.error("Attendance Error:", error);
       const errorMessage =
         error.response?.data?.message || "❌ Error submitting attendance";
       set({ error: errorMessage, isLoading: false });
+      toast(errorMessage);
     }
   },
 
@@ -80,12 +82,10 @@ export const useAttendanceStore = create((set) => ({
   getAttendanceToday: async (userId) => {
     set({ isLoading: true, error: null });
     try {
-      // const response = await axios.get(`${API_URL}attendance/today?userId=${userId}`);
-
-      const response = await axios.get(`${API_URL}attendance/today`, {
+      const response = await axios.post(`${API_URL}attendance/today`, {
         userId,
       });
-      console.log(userId);
+
       set({
         attendances: response.data.attendances,
         isLoading: false,
