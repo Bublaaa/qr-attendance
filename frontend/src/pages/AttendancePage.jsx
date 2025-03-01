@@ -1,10 +1,13 @@
 import { NavLink } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { useAttendanceStore } from "../store/attendanceStore";
+import { useAuthStore } from "../store/authStore.js";
 import QrScanner from "../components/QrScanner";
 
 const AttendancePage = () => {
-  const [scanResult, setScanResult] = useState(null);
+  const { user } = useAuthStore();
+  const { attendances, message, handleScanSuccess } = useAttendanceStore();
 
   return (
     <motion.div
@@ -27,15 +30,14 @@ const AttendancePage = () => {
           <h3 className="text-xl font-semibold text-green-400 mb-3">
             Attendance Today
           </h3>
-          {scanResult ? (
-            <div>
-              ✅ Success:{" "}
-              <a href={scanResult} target="_blank" rel="noopener noreferrer">
-                {scanResult}
-              </a>
-            </div>
+          {!attendances ? (
+            <QrScanner
+              onScanSuccess={(scannedData) =>
+                handleScanSuccess(scannedData, user._id)
+              }
+            />
           ) : (
-            <QrScanner onScanSuccess={setScanResult} />
+            <div>✅ Success: {message}</div>
           )}
         </motion.div>
       </div>

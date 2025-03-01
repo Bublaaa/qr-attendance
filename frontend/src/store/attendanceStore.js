@@ -34,6 +34,32 @@ export const useAttendanceStore = create((set) => ({
     }
   },
 
+  handleScanSuccess: async (scannedData, userId) => {
+    set({ isLoading: true, error: null, message: null });
+
+    try {
+      const { sessionId } = JSON.parse(scannedData);
+      const attendanceUrl = `${API_URL}attendance/create/${sessionId}`;
+      set({ message: "Sending attendance..." });
+      console.log(sessionId);
+      const response = await axios.post(attendanceUrl, { userId });
+
+      if (response) {
+        set({
+          attendances: response.data,
+          isLoading: false,
+          message: "✅ Attendance recorded successfully!",
+        });
+        toast.success("Attendance recorded successfully!");
+      }
+    } catch (error) {
+      toast.error(error);
+      const errorMessage =
+        error.response?.data?.message || "❌ Error submitting attendance";
+      set({ error: errorMessage, isLoading: false });
+    }
+  },
+
   getAttendance: async (userId) => {
     set({ isLoading: true, error: null });
 

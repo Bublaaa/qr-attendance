@@ -1,35 +1,60 @@
-import { useEffect, useState } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
+import { useEffect, useRef, useState } from "react";
+import { Html5Qrcode } from "html5-qrcode";
 
 const QrScanner = ({ onScanSuccess }) => {
   const [scanResult, setScanResult] = useState(null);
+  const scannerRef = useRef(null);
+  const isScanning = useRef(false); // Prevent multiple instances
 
   useEffect(() => {
-    const scanner = new Html5QrcodeScanner("reader", {
-      qrbox: { width: 250, height: 250 },
-      fps: 5,
-    });
+    const startScanner = async () => {
+      if (isScanning.current) return; // Prevent multiple starts
 
-    scanner.render(
-      (result) => {
-        setScanResult(result);
-        onScanSuccess?.(result);
-        scanner.clear();
-      },
-      (err) => {
-        console.warn("QR Scan Error:", err);
+      try {
+        scannerRef.current = new Html5Qrcode("reader");
+        const cameras = await Html5Qrcode.getCameras();
+
+        if (cameras.length === 0) {
+          console.error("No cameras found");
+          return;
+        }
+
+        isScanning.current = true; // Mark as scanning
+
+        await scannerRef.current.start(
+          cameras[0].id, // Use the first available camera
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          (decodedText) => {
+            setScanResult(decodedText);
+            onScanSuccess?.(decodedText);
+            stopScanner(); // Stop after successful scan
+          },
+          (errorMessage) => {
+            console.warn("QR Scan Error:", errorMessage);
+          }
+        );
+      } catch (error) {
+        console.error("Error starting scanner:", error);
       }
-    );
-
-    return () => {
-      scanner.clear();
-      // scanner.stop();
     };
-  }, []);
+
+    startScanner();
+
+    return () => stopScanner(); // Cleanup on unmount
+  }, [onScanSuccess]);
+
+  const stopScanner = async () => {
+    if (scannerRef.current && isScanning.current) {
+      await scannerRef.current.stop();
+      await scannerRef.current.clear();
+      scannerRef.current = null;
+      isScanning.current = false; // Mark as stopped
+    }
+  };
 
   return scanResult ? (
     <div>
-      Success:{" "}
+      ✅ Success:{" "}
       <a href={scanResult} target="_blank" rel="noopener noreferrer">
         {scanResult}
       </a>

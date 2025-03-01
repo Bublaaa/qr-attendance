@@ -2,11 +2,11 @@ import { Attendance } from "../models/attendance.model.js";
 import { generateSessionId } from "../utils/generateSessionId.js";
 import QRCode from "qrcode";
 
-const getStatus = (checkInTime) => {
+const getStatus = (clockIn) => {
   const clockInTime = new Date();
   clockInTime.setHours(8, 0, 0, 0); // Set clock-in time to 08:00 AM
 
-  const diffMinutes = (checkInTime - clockInTime) / (1000 * 60);
+  const diffMinutes = (clockInTime - clockIn) / (1000 * 60);
 
   if (diffMinutes > 30) return "absent";
   if (diffMinutes > 0) return "late";
@@ -35,13 +35,21 @@ const requestLocation = () => {
 
 export const createAttendance = async (req, res) => {
   const { userId } = req.body;
-
+  const { sessionId } = req.params;
   try {
-    const checkInTime = new Date();
-    const status = getStatus(checkInTime);
+    const today = now.toISOString().split("T")[0];
+    const todaySessionId = today + "-session";
+    const clockInTime = new Date();
+    const status = getStatus(clockInTime);
 
     let latitude = null;
     let longitude = null;
+
+    if (sessionId !== todaySessionId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Session id is not match" });
+    }
 
     // Request location permission
     try {
@@ -55,25 +63,30 @@ export const createAttendance = async (req, res) => {
       });
     }
 
-    // Check if user already checked in
-    let attendance = await Attendance.findOne({ userId, checkOutTime: null });
+    // Check if user already clocked in
+    let attendance = await Attendance.findOne({
+      userId,
+      sessionId,
+      clockOutTime: null,
+    });
 
     if (attendance) {
-      // Checking out
-      attendance.checkOutTime = new Date();
+      // clocking out
+      attendance.clockOutTime = new Date();
       await attendance.save();
 
       return res.status(200).json({
         success: true,
-        message: "Check-out successful",
+        message: "clock-out successful",
         attendance,
       });
     } else {
-      // Checking in
+      // clocking in
       attendance = new Attendance({
         userId,
-        checkInTime,
-        checkOutTime: null,
+        sessionId,
+        clockInTime,
+        clockOutTime: null,
         status,
         latitude,
         longitude,
@@ -83,7 +96,7 @@ export const createAttendance = async (req, res) => {
 
       return res.status(201).json({
         success: true,
-        message: "Check-in successful",
+        message: "clock-in successful",
         attendance,
       });
     }
@@ -130,7 +143,7 @@ export const getAttendanceToday = async (req, res) => {
 
     const attendances = await Attendance.find({
       userId,
-      checkInTime: { $gte: startOfDay, $lte: endOfDay },
+      clockInTime: { $gte: startOfDay, $lte: endOfDay },
     });
 
     if (!attendances.length) {
@@ -147,7 +160,7 @@ export const getAttendanceToday = async (req, res) => {
 
 export const updateAttendance = async (req, res) => {
   const { id } = req.params;
-  const { checkInTime, checkOutTime, status } = req.body;
+  const { clockInTime, clockOutTime, status } = req.body;
 
   try {
     const attendance = await Attendance.findById(attendanceId);
@@ -159,17 +172,17 @@ export const updateAttendance = async (req, res) => {
       });
     }
 
-    // Validation: Check-out must be after check-in
-    if (checkOutTime && new Date(checkOutTime) <= new Date(checkInTime)) {
+    // Validation: clock-out must be after clock-in
+    if (clockOutTime && new Date(clockOutTime) <= new Date(clockInTime)) {
       return res.status(400).json({
         success: false,
-        message: "Check-out time must be after check-in time",
+        message: "clock-out time must be after clock-in time",
       });
     }
 
     // Update fields only if provided
-    if (checkInTime) attendance.checkInTime = new Date(checkInTime);
-    if (checkOutTime) attendance.checkOutTime = new Date(checkOutTime);
+    if (clockInTime) attendance.clockInTime = new Date(clockInTime);
+    if (clockOutTime) attendance.clockOutTime = new Date(clockOutTime);
     if (status) attendance.status = status;
 
     await attendance.save();
@@ -214,7 +227,7 @@ export const generateQrCode = async (req, res) => {
 
   try {
     const sessionId = generateSessionId();
-    const attendanceUrl = `${API_URL}attendance/create?sessionId=${sessionId}`;
+    const attendanceUrl = `${API_URL}attendance/create/${sessionId}`;
     const qrCodeDataUrl = await QRCode.toDataURL(attendanceUrl);
 
     res.status(200).json({
