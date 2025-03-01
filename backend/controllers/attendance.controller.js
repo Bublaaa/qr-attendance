@@ -4,15 +4,16 @@ import QRCode from "qrcode";
 import { requestLocation } from "../../frontend/src/utils/location.js";
 
 const getStatus = (clockIn) => {
-  const clockInTime = new Date();
-  clockInTime.setHours(8, 0, 0, 0); // Set clock-in time to 08:00 AM
+  const referenceTime = new Date(clockIn);
+  referenceTime.setHours(8, 0, 0, 0);
 
-  const diffMinutes = (clockInTime - clockIn) / (1000 * 60);
+  const diffMinutes = (clockIn - referenceTime) / (1000 * 60);
 
   if (diffMinutes > 30) return "absent";
   if (diffMinutes > 0) return "late";
-  if (diffMinutes >= -10 && diffMinutes <= 0) return "early";
-  if (diffMinutes >= -5 && diffMinutes <= 0) return "on-time";
+  if (diffMinutes >= -10) return "early";
+  if (diffMinutes >= -5) return "on-time";
+
   return "on-time";
 };
 
@@ -36,45 +37,53 @@ export const createAttendance = async (req, res) => {
         .json({ success: false, message: "Session ID does not match" });
     }
 
-    // Request location permission
     let latitude = location.latitude;
     let longitude = location.longitude;
 
-    // Check if user has already clocked in
-    let attendance = await Attendance.findOne({
+    // Find existing attendance record for today
+    let existingAttendance = await Attendance.findOne({
       userId,
       sessionId,
-      clockOutTime: null,
     });
 
-    if (attendance) {
-      attendance.clockOutTime = new Date();
-      await attendance.save();
+    // If the user already has an attendance record without clockOutTime, update it
+    if (existingAttendance && !existingAttendance.clockOutTime) {
+      existingAttendance.clockOutTime = new Date();
+      await existingAttendance.save();
 
       return res.status(200).json({
         success: true,
         message: "Clock-out successful",
-        attendance,
-      });
-    } else {
-      attendance = new Attendance({
-        userId,
-        sessionId,
-        clockInTime: new Date(),
-        clockOutTime: null,
-        status: getStatus(new Date()),
-        latitude,
-        longitude,
-      });
-
-      await attendance.save();
-
-      return res.status(201).json({
-        success: true,
-        message: "Clock-in successful",
-        attendance,
+        attendance: existingAttendance,
       });
     }
+
+    // If the user has already clocked in and out today, prevent multiple records
+    if (existingAttendance && existingAttendance.clockOutTime) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already completed your attendance today.",
+      });
+    }
+
+    // Create a new attendance record for the day
+    const newAttendance = new Attendance({
+      userId,
+      sessionId,
+      clockInTime: new Date(),
+      clockOutTime: null,
+      status: getStatus(new Date()),
+      latitude,
+      longitude,
+    });
+
+    await newAttendance.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Clock-in successful",
+      attendance: newAttendance,
+    });
   } catch (error) {
     console.error("Attendance Error:", error);
     res.status(500).json({ success: false, message: error.message });
