@@ -10,10 +10,29 @@ const API_URL =
 axios.defaults.withCredentials = true;
 
 export const useAttendanceStore = create((set) => ({
+  qrCode: null,
+  url: null,
   attendances: null,
   error: null,
   isLoading: false,
   message: null,
+
+  fetchQrCode: async () => {
+    set({ isLoading: true, error: null, qrCode: null, url: null });
+    try {
+      const response = await axios.get(`${API_URL}attendance/generate-qr`);
+      set({
+        isLoading: false,
+        qrCode: response.data.qrCode,
+        url: response.data.attendanceUrl,
+      });
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message || "Error fetching QR Code";
+      set({ error: errorMessage, isLoading: false });
+      toast.error(errorMessage);
+    }
+  },
 
   getAttendance: async (userId) => {
     set({ isLoading: true, error: null });
@@ -27,7 +46,6 @@ export const useAttendanceStore = create((set) => ({
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error fetching attendances";
-
       set({ error: errorMessage, isLoading: false });
       toast.error(errorMessage);
     }
@@ -36,12 +54,14 @@ export const useAttendanceStore = create((set) => ({
   getAttendanceToday: async (userId) => {
     set({ isLoading: true, error: null });
     try {
+      // const response = await axios.get(`${API_URL}attendance/today?userId=${userId}`);
+
       const response = await axios.get(`${API_URL}attendance/today`, {
         userId,
       });
       console.log(userId);
       set({
-        attendances: response.attendances,
+        attendances: response.data.attendances,
         isLoading: false,
       });
     } catch (error) {

@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AttendancePage from "./pages/AttendancePage";
+import GenerateQrCodePage from "./pages/GenerateQrCodePage";
 
 import LoadingSpinner from "./components/LoadingSpinner";
 
@@ -68,6 +69,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AttendancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/generate-qr"
+          element={
+            <ProtectedRoute>
+              <GenerateQrCodePage />
             </ProtectedRoute>
           }
         />

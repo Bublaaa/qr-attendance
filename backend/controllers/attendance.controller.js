@@ -207,9 +207,14 @@ export const deleteAttendance = async (req, res) => {
 };
 
 export const generateQrCode = async (req, res) => {
+  const API_URL =
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:5002/api/"
+      : "/api/";
+
   try {
     const sessionId = generateSessionId();
-    const attendanceUrl = `http://localhost:5002/api/attendance/create?sessionId=${sessionId}`;
+    const attendanceUrl = `${API_URL}attendance/create?sessionId=${sessionId}`;
     const qrCodeDataUrl = await QRCode.toDataURL(attendanceUrl);
 
     res.status(200).json({
