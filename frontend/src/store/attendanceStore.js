@@ -36,9 +36,7 @@ export const useAttendanceStore = create((set) => ({
 
   handleScanSuccess: async (scannedData, userId, location) => {
     set({ isLoading: true, error: null, message: null });
-    console.log(scannedData);
     try {
-      console.log("Posting to:", scannedData);
       set({ message: "Sending attendance..." });
 
       const response = await axios.post(scannedData, { userId, location });
@@ -54,11 +52,10 @@ export const useAttendanceStore = create((set) => ({
         throw new Error(response.data.message);
       }
     } catch (error) {
-      console.error("Attendance Error:", error);
       const errorMessage =
         error.response?.data?.message || "❌ Error submitting attendance";
       set({ error: errorMessage, isLoading: false });
-      toast(errorMessage);
+      toast.error(errorMessage);
     }
   },
 

@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { formatDate } from "../utils/date.js";
 import { useAuthStore } from "../store/authStore.js";
 import { useAttendanceStore } from "../store/attendanceStore.js";
 import { NavLink } from "react-router-dom";
@@ -10,7 +9,7 @@ const DashboardPage = () => {
   const handleLogout = () => {
     logout();
   };
-  const { attendances, isLoading, getAttendanceToday } = useAttendanceStore();
+  const { attendances, getAttendanceToday } = useAttendanceStore();
   useEffect(() => {
     getAttendanceToday(user._id);
   }, [getAttendanceToday]);
