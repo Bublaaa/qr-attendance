@@ -26,6 +26,7 @@ export const useAttendanceStore = create((set) => ({
         qrCode: response.data.qrCode,
         url: response.data.attendanceUrl,
       });
+      toast.success("Successfully fetched QR Code!");
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error fetching QR Code";
@@ -60,14 +61,17 @@ export const useAttendanceStore = create((set) => ({
   },
 
   getAttendance: async (userId) => {
-    set({ isLoading: true, error: null });
-
+    set({ isLoading: true, error: null, message: null });
     try {
       const response = await axios.post(`${API_URL}attendance/get`, { userId });
+
       set({
-        attendances: response.data.attendances,
+        attendances: response.data.attendances || [],
         isLoading: false,
+        message: "Success",
       });
+
+      toast.success("Successfully fetched attendance data!");
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Error fetching attendances";
@@ -77,16 +81,16 @@ export const useAttendanceStore = create((set) => ({
   },
 
   getAttendanceToday: async (userId) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, error: null, message: null });
     try {
       const response = await axios.post(`${API_URL}attendance/today`, {
         userId,
       });
-
       set({
-        attendances: response.data.attendances,
+        attendances: response.data.attendances || [],
         isLoading: false,
       });
+      toast.success("Successfully fetched attendance data!");
     } catch (error) {
       const errorMessage = error.response?.data?.message || "No attendance yet";
       set({ error: errorMessage, isLoading: false });
