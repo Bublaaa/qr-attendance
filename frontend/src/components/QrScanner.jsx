@@ -32,7 +32,8 @@ const QrScanner = ({ onScanSuccess }) => {
 
             await stopScanner();
             onScanSuccess?.(decodedText);
-            navigate("/");
+            navigate("/", { replace: true });
+            window.location.reload();
 
             // Set debounce timeout (e.g., 5 seconds)
             // setTimeout(() => {

@@ -67,7 +67,7 @@ const DashboardPage = () => {
           {/* Clock In */}
           <p className="text-gray-300">
             <span className="font-bold">Clock In :</span>
-            {attendances
+            {attendances?.length > 0 && attendances[0]?.clockInTime
               ? new Date(attendances[0].clockInTime).toLocaleTimeString(
                   "id-ID",
                   {
@@ -75,12 +75,13 @@ const DashboardPage = () => {
                     minute: "2-digit",
                   }
                 )
-              : "No clock in recorded"}
+              : "No clock In recorded"}
           </p>
+
           {/* Clock Out */}
           <p className="text-gray-300">
             <span className="font-bold">Clock Out :</span>
-            {attendances
+            {attendances?.length > 0 && attendances[0]?.clockOutTime
               ? new Date(attendances[0].clockOutTime).toLocaleTimeString(
                   "id-ID",
                   {
